@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maafin Aku Ya, Ninis.. 🥺</title>
+    <!-- Script untuk Pop-up -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #ffeef2;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Animasi Hujan Hati & Bunga */
+        .falling-element {
+            position: absolute;
+            top: -20px;
+            pointer-events: none;
+            animation: fall linear forwards;
+            z-index: 1;
+            font-size: 26px;
+        }
+        @keyframes fall {
+            to { transform: translateY(105vh) rotate(360deg); }
+        }
+
+        /* Konten Utama */
+        .container {
+            text-align: center;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 25px 15px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(255, 117, 151, 0.2);
+            width: 95%;
+            max-width: 380px;
+            margin-top: 20px;
+        }
+
+        h1 { color: #ff7597; font-size: 24px; margin-bottom: 5px; }
+        p.instruction { color: #666; font-size: 15px; margin-bottom: 25px; }
+
+        /* Desain Amplop (Ukurannya Dibuat Jauh Lebih Besar) */
+        .envelope-wrapper {
+            position: relative;
+            cursor: pointer;
+            width: 320px;
+            height: 200px;
+            background-color: #ffb3c6;
+            margin: 0 auto 20px auto;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .envelope-wrapper:hover { transform: scale(1.02); }
+
+        .envelope-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            border-left: 160px solid transparent;
+            border-right: 160px solid transparent;
+            border-top: 110px solid #ff8fab;
+            transform-origin: top;
+            transition: transform 0.4s 0.2s;
+            z-index: 5;
+        }
+        .envelope-wrapper.open::before {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+
+        /* Surat di dalam amplop (Jauh Lebih Besar) */
+        .letter {
+            position: absolute;
+            bottom: 5px; left: 10px; right: 10px;
+            height: 180px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px 20px;
+            box-sizing: border-box;
+            transition: transform 0.6s ease, opacity 0.4s ease, height 0.6s ease;
+            z-index: 2;
+            text-align: justify;
+            font-size: 14px;
+            color: #444;
+            opacity: 0; 
+            transform: translateY(0);
+            overflow-y: auto; 
+        }
+        
+        /* Modifikasi Scrollbar pada surat */
+        .letter::-webkit-scrollbar { width: 5px; }
+        .letter::-webkit-scrollbar-thumb { background: #ffb3c6; border-radius: 5px; }
+
+        .envelope-wrapper.open .letter {
+            opacity: 1;
+            transform: translateY(-130px);
+            z-index: 4;
+            height: 350px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+        }
+
+        .letter p {
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        /* Tombol Pilihan */
+        .btn-group {
+            display: none;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 50px;
+            position: relative;
+            height: 50px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        #btn-yes {
+            background-color: #ff7597;
+            color: white;
+            box-shadow: 0 4px 10px rgba(255, 117, 151, 0.4);
+        }
+        #btn-no {
+            background-color: #ccc;
+            color: white;
+            position: absolute;
+            left: 55%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Backsound Musik Otomatis -->
+    <audio id="backsound" loop autoplay>
+        <source src="sorry.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="container">
+        <h1>Untuk Ninis... 🤍</h1>
+        <p class="instruction" id="instruction">Sentuh amplopnya ya!</p>
+
+        <div class="envelope-wrapper" id="envelope" onclick="bukaSurat()">
+            <div class="letter">
+                <p>Ninis, aku cuma mau bilang kalau kamu itu cantiknya benar-benar punya cara sendiri buat bikin dunia terasa lebih tenang. Senyummu seolah bisa ngalahin riuh satu hari yang capek, tatapanmu selalu punya kehangatan yang susah dijelasin, dan setiap kali lihat kamu rasanya waktu pengen berhenti sebentar cuma buat menikmati indahnya kamu lebih lama. Mungkin itu sedikit berlebihan, tapi memang sesulit itu buat nyari kata yang sebanding sama cantiknya kamu.<br><br>Di balik itu semua, aku juga mau minta maaf karena akhir-akhir ini aku malah jadi orang yang ngeselin, bikin kamu BT, dan mungkin bikin suasana hati kamu jadi nggak enak. Itu bukan hal yang pengen aku lakuin, apalagi ke kamu. Maaf ya kalau tingkahku kebangetan sampai bikin kamu capek ngadepin aku. Aku bakal berusaha lebih peka, lebih bisa jaga sikap, dan nggak ngulangin hal yang sama lagi, karena senyum kamu jauh lebih berharga daripada keisenganku. Semoga kamu bisa maafin aku, ya. 🤍</p>
+            </div>
+        </div>
+
+        <div class="btn-group" id="btn-group">
+            <button id="btn-yes" onclick="dimaafin()">Maafin! 😁</button>
+            <button id="btn-no" onmouseover="kabur()" onclick="kabur()">Engga 😜</button>
+        </div>
+    </div>
+
+    <script>
+        // Efek Hujan Lope & Bunga
+        const elements = ['🤍', '✨', '☁️', '🕊️'];
+        function createFallingElement() {
+            const el = document.createElement('div');
+            el.classList.add('falling-element');
+            el.innerText = elements[Math.floor(Math.random() * elements.length)];
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.animationDuration = Math.random() * 3 + 2 + 's';
+            document.body.appendChild(el);
+            setTimeout(() => { el.remove(); }, 5000);
+        }
+        setInterval(createFallingElement, 500);
+
+        // Buka Surat & Play Musik
+        let isOpened = false;
+        function bukaSurat() {
+            if (!isOpened) {
+                document.getElementById('envelope').classList.add('open');
+                document.getElementById('instruction').innerText = "Dibaca ya pesannya (bisa di-scroll)...";
+                setTimeout(() => {
+                    document.getElementById('btn-group').style.display = 'flex';
+                }, 1500);
+                
+                // Play musik
+                const audio = document.getElementById('backsound');
+                if(audio) {
+                    audio.play().catch(e => console.log("Auto-play dicegah browser"));
+                }
+                isOpened = true;
+            }
+        }
+
+        // Tombol Engga Kabur
+        function kabur() {
+            const btnNo = document.getElementById('btn-no');
+            const container = document.querySelector('.container');
+            const containerRect = container.getBoundingClientRect();
+            
+            const randomX = Math.random() * (containerRect.width - btnNo.offsetWidth - 40) - (containerRect.width / 2) + 50;
+            const randomY = Math.random() * 80 - 40;
+            
+            btnNo.style.transform = `translate(${randomX}px, ${randomY}px)`;
+        }
+
+        // Tombol Maafin (Pop Up + Redirect ke WA)
+        function dimaafin() {
+            Swal.fire({
+                title: 'Yeeeay! 🎉',
+                text: 'Makasih banyak ya Ninis udah dimaafin. Senyum dong, jangan badmood lagi! 😁✨',
+                
+                // NAMA FOTO SUDAH DISESUAIKAN
+                imageUrl: 'ninis 1.png', 
+                
+                imageWidth: 250,
+                imageAlt: 'Foto Ninis',
+                confirmButtonText: 'Terimakasih Kembali (lanjut)',
+                confirmButtonColor: '#ff7597',
+                backdrop: `rgba(255,117,151,0.4)`
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    
+                    // NOMOR WA SUDAH DISESUAIKAN
+                    const nomorWA = "6282191912114"; 
+                    
+                    const pesan = "Iyaaa njoeee, akuu udah maafin!!! ";
+                    
+                    const linkWA = `https://wa.me/${nomorWA}?text=${encodeURIComponent(pesan)}`;
+                    window.location.href = linkWA;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
