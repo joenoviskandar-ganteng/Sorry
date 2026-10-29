@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Catat Keuangan AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    /* ─── Token System ────────────────────────────────────────────── */
+    :root {
+      /* Palette: slate surfaces, teal accent, semantic red/green */
+      --bg:       #f5f7fb;
+      --surface:  #ffffff;
+      --surface2: #f0f4f8;
+      --border:   #e2e8f0;
+      --fg:       #0f172a;
+      --fg2:      #64748b;
+      --fg3:      #94a3b8;
+      --accent:   #0ea5e9;
+      --accent-s: #0284c7;
+      --income:   #10b981;
+      --income-bg:#d1fae5;
+      --expense:  #ef4444;
+      --expense-bg:#fee2e2;
+      --warn:     #f59e0b;
+      --warn-bg:  #fef3c7;
+      --radius:   12px;
+      --shadow:   0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg:       #0c1225;
+        --surface:  #141c2f;
+        --surface2: #1a243a;
+        --border:   #232e44;
+        --fg:       #e2e8f0;
+        --fg2:      #94a3b8;
+        --fg3:      #64748b;
+        --accent:   #38bdf8;
+        --accent-s: #0ea5e9;
+        --income:   #34d399;
+        --income-bg:#064e3b;
+        --expense:  #f87171;
+        --expense-bg:#450a0a;
+        --warn:     #fbbf24;
+        --warn-bg:  #451a03;
+        --shadow:   0 1px 3px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.2);
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg:       #0c1225;
+      --surface:  #141c2f;
+      --surface2: #1a243a;
+      --border:   #232e44;
+      --fg:       #e2e8f0;
+      --fg2:      #94a3b8;
+      --fg3:      #64748b;
+      --accent:   #38bdf8;
+      --accent-s: #0ea5e9;
+      --income:   #34d399;
+      --income-bg:#064e3b;
+      --expense:  #f87171;
+      --expense-bg:#450a0a;
+      --warn:     #fbbf24;
+      --warn-bg:  #451a03;
+      --shadow:   0 1px 3px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.2);
+      color-scheme: dark;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+      padding-block: 0;
+    }
+
+    /* ─── Header ─────────────────────────────────────────────────── */
+    .app-header {
+      position: sticky;
+      top: env(safe-area-inset-top, 0px);
+      z-index: 50;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 max(24px, env(safe-area-inset-left, 0px));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--fg);
+    }
+    .header-icon {
+      width: 30px; height: 30px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+    }
+    .theme-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 34px; height: 34px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      color: var(--fg2);
+      transition: background .15s;
+    }
+    .theme-btn:hover { background: var(--border); }
+
+    /* ─── Layout ─────────────────────────────────────────────────── */
+    .app-body {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding-block: 24px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 780px) {
+      .app-body { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Cards ──────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--fg2);
+    }
+    .card-body { padding: 20px; }
+
+    /* ─── Summary tiles ──────────────────────────────────────────── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 780px) {
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+    .tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .tile-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--fg3);
+      margin-bottom: 6px;
+    }
+    .tile-value {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+    .tile-value.income { color: var(--income); }
+    .tile-value.expense { color: var(--expense); }
+    .tile-value.balance { color: var(--accent); }
+    .tile-sub {
+      font-size: 11px;
+      color: var(--fg3);
+      margin-top: 4px;
+    }
+
+    /* ─── Form ───────────────────────────────────────────────────── */
+    .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: var(--fg2); }
+    .form-control {
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface2);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color .15s;
+      width: 100%;
+    }
+    .form-control:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    .form-control::placeholder { color: var(--fg3); }
+    .type-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .type-btn {
+      padding: 9px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface2);
+      color: var(--fg2);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: center;
+    }
+    .type-btn.active-income { background: var(--income-bg); border-color: var(--income); color: var(--income); }
+    .type-btn.active-expense { background: var(--expense-bg); border-color: var(--expense); color: var(--expense); }
+    .submit-btn {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, opacity .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .submit-btn:hover { background: var(--accent-s); }
+    .submit-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+    /* ─── AI Analysis ────────────────────────────────────────────── */
+    .analysis-btn {
+      padding: 8px 14px;
+      border: 1.5px solid var(--accent);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--accent);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .analysis-btn:hover { background: var(--accent); color: #fff; }
+    .analysis-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .analysis-text {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--fg2);
+      white-space: pre-wrap;
+      min-height: 60px;
+    }
+    .analysis-placeholder {
+      color: var(--fg3);
+      font-size: 13px;
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    /* ─── Transaction list ───────────────────────────────────────── */
+    .tx-list { display: flex; flex-direction: column; gap: 0; }
+    .tx-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background .1s;
+    }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-item:hover { background: var(--surface2); }
+    .tx-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .tx-icon.income { background: var(--income-bg); }
+    .tx-icon.expense { background: var(--expense-bg); }
+    .tx-info { flex: 1; min-width: 0; }
+    .tx-desc {
+      font-weight: 600;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tx-meta {
+      font-size: 11px;
+      color: var(--fg3);
+      display: flex;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .tx-category {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 7px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+      background: var(--surface2);
+      color: var(--fg2);
+      border: 1px solid var(--border);
+    }
+    .tx-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+    .tx-amount.income { color: var(--income); }
+    .tx-amount.expense { color: var(--expense); }
+    .tx-delete {
+      background: none;
+      border: none;
+      padding: 4px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--fg3);
+      opacity: 0;
+      transition: opacity .15s, color .15s;
+      font-size: 14px;
+    }
+    .tx-item:hover .tx-delete { opacity: 1; }
+    .tx-delete:hover { color: var(--expense); }
+
+    /* ─── Empty state ────────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--fg3);
+    }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 13px; }
+
+    /* ─── Loading spinner ────────────────────────────────────────── */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner.dark {
+      border-color: rgba(14,165,233,.3);
+      border-top-color: var(--accent);
+    }
+
+    /* ─── Toast ──────────────────────────────────────────────────── */
+    .toast-container {
+      position: fixed;
+      bottom: max(24px, env(safe-area-inset-bottom, 0px));
+      right: max(24px, env(safe-area-inset-right, 0px));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 100;
+    }
+    .toast {
+      background: var(--fg);
+      color: var(--bg);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow);
+      animation: slideIn .2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── Filter bar ─────────────────────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .filter-chip {
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--fg2);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+    .filter-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .filter-chip:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+
+    /* ─── Category breakdown ─────────────────────────────────────── */
+    .cat-list { display: flex; flex-direction: column; gap: 8px; padding: 16px 20px; }
+    .cat-row { display: flex; align-items: center; gap: 10px; }
+    .cat-name { flex: 1; font-size: 12px; font-weight: 500; color: var(--fg2); }
+    .cat-bar-wrap { flex: 2; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .cat-bar { height: 100%; border-radius: 3px; transition: width .4s ease; }
+    .cat-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      color: var(--fg2);
+      width: 80px;
+      text-align: right;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-brand">
+    <div class="header-icon">💰</div>
+    Dompet AI
+  </div>
+  <button class="theme-btn" onclick="toggleTheme()" title="Ganti tema">🌙</button>
+</header>
+
+<div class="app-body">
+  <!-- Left column: form + analysis -->
+  <aside>
+    <!-- Input form -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <span class="card-title">Catat Transaksi</span>
+      </div>
+      <div class="card-body">
+        <form id="tx-form">
+          <div class="form-group">
+            <label>Tipe</label>
+            <div class="type-toggle">
+              <button type="button" class="type-btn active-income" id="btn-income" onclick="setType('income')">+ Pemasukan</button>
+              <button type="button" class="type-btn" id="btn-expense" onclick="setType('expense')">- Pengeluaran</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="desc">Keterangan</label>
+            <input type="text" id="desc" class="form-control" placeholder="cth: Gaji bulan Oktober" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="amount">Jumlah (Rp)</label>
+            <input type="number" id="amount" class="form-control" placeholder="0" min="1" required>
+          </div>
+          <div class="form-group">
+            <label for="date">Tanggal</label>
+            <input type="date" id="date" class="form-control" required>
+          </div>
+          <button type="submit" class="submit-btn" id="submit-btn">
+            <span id="submit-text">Simpan & Kategorikan AI</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- AI Analysis -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Analisis AI</span>
+        <button class="analysis-btn" id="analyze-btn" onclick="getAnalysis()">
+          <span id="analyze-icon">✨</span> Analisis
+        </button>
+      </div>
+      <div class="card-body" style="padding:16px 20px">
+        <div id="analysis-content">
+          <div class="analysis-placeholder">
+            Klik "Analisis" untuk mendapatkan<br>insight keuanganmu dari AI
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right column: summary + transactions -->
+  <main>
+    <!-- Summary tiles -->
+    <div class="summary-grid" id="summary-grid">
+      <div class="tile">
+        <div class="tile-label">Pemasukan</div>
+        <div class="tile-value income" id="total-income">Rp 0</div>
+        <div class="tile-sub" id="income-count">0 transaksi</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Pengeluaran</div>
+        <div class="tile-value expense" id="total-expense">Rp 0</div>
+        <div class="tile-sub" id="expense-count">0 transaksi</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Saldo</div>
+        <div class="tile-value balance" id="balance">Rp 0</div>
+        <div class="tile-sub" id="savings-rate">Tingkat tabungan: 0%</div>
+      </div>
+    </div>
+
+    <!-- Transactions card -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Riwayat Transaksi</span>
+        <span style="font-size:12px;color:var(--fg3)" id="tx-count">0 transaksi</span>
+      </div>
+      <div class="filter-bar" id="filter-bar">
+        <button class="filter-chip active" onclick="setFilter('all')">Semua</button>
+        <button class="filter-chip" onclick="setFilter('income')">Pemasukan</button>
+        <button class="filter-chip" onclick="setFilter('expense')">Pengeluaran</button>
+      </div>
+      <div id="tx-list">
+        <div class="empty-state">
+          <div class="icon">📋</div>
+          <p>Belum ada transaksi.<br>Mulai catat keuanganmu!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category breakdown -->
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <span class="card-title">Pengeluaran per Kategori</span>
+      </div>
+      <div id="cat-breakdown">
+        <div style="padding:20px;text-align:center;color:var(--fg3);font-size:13px">
+          Belum ada data pengeluaran
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+  // ─── State ────────────────────────────────────────────────────────
+  let transactions = [];
+  let currentType = 'income';
+  let currentFilter = 'all';
+
+  // ─── Init ─────────────────────────────────────────────────────────
+  document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+
+  // Load theme
+  try {
+    const saved = localStorage.getItem('theme');
+    if (saved) document.documentElement.dataset.theme = saved;
+  } catch(e) {}
+
+  loadTransactions();
+
+  // ─── API helpers ──────────────────────────────────────────────────
+  async function api(method, path, body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(path, opts);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Terjadi kesalahan');
+    return data;
+  }
+
+  // ─── Load & render ────────────────────────────────────────────────
+  async function loadTransactions() {
+    try {
+      transactions = await api('GET', '/api/transactions');
+      renderTransactions();
+      loadSummary();
+    } catch(e) {
+      showToast('Gagal memuat data: ' + e.message, 'error');
+    }
+  }
+
+  async function loadSummary() {
+    try {
+      const s = await api('GET', '/api/summary');
+      document.getElementById('total-income').textContent = fmt(s.totalIncome);
+      document.getElementById('total-expense').textContent = fmt(s.totalExpense);
+      document.getElementById('balance').textContent = fmt(s.balance);
+
+      const incTx = transactions.filter(t => t.type === 'income').length;
+      const expTx = transactions.filter(t => t.type === 'expense').length;
+      document.getElementById('income-count').textContent = `${incTx} transaksi`;
+      document.getElementById('expense-count').textContent = `${expTx} transaksi`;
+
+      const rate = s.totalIncome > 0 ? ((s.balance / s.totalIncome) * 100).toFixed(1) : 0;
+      document.getElementById('savings-rate').textContent = `Tingkat tabungan: ${rate}%`;
+
+      // Balance color
+      const balEl = document.getElementById('balance');
+      balEl.style.color = s.balance < 0 ? 'var(--expense)' : 'var(--income)';
+
+      renderCategories(s.byCategory);
+    } catch(e) { /* silent */ }
+  }
+
+  function renderCategories(cats) {
+    const expCats = cats.filter(c => c.type === 'expense').sort((a, b) => b.total - a.total);
+    if (!expCats.length) return;
+
+    const max = expCats[0].total;
+    const hues = ['#ef4444','#f97316','#f59e0b','#84cc16','#06b6d4','#8b5cf6','#ec4899','#6b7280'];
+    const html = expCats.map((c, i) => `
+      <div class="cat-row">
+        <div class="cat-name">${c.category}</div>
+        <div class="cat-bar-wrap"><div class="cat-bar" style="width:${(c.total/max*100).toFixed(1)}%;background:${hues[i%hues.length]}"></div></div>
+        <div class="cat-amount">${fmt(c.total)}</div>
+      </div>`).join('');
+    document.getElementById('cat-breakdown').innerHTML = `<div class="cat-list">${html}</div>`;
+  }
+
+  function renderTransactions() {
+    const filtered = currentFilter === 'all'
+      ? transactions
+      : transactions.filter(t => t.type === currentFilter);
+
+    document.getElementById('tx-count').textContent = `${filtered.length} transaksi`;
+
+    if (!filtered.length) {
+      document.getElementById('tx-list').innerHTML = `
+        <div class="empty-state">
+          <div class="icon">${currentFilter === 'income' ? '📈' : currentFilter === 'expense' ? '📉' : '📋'}</div>
+          <p>Tidak ada transaksi ${currentFilter === 'income' ? 'pemasukan' : currentFilter === 'expense' ? 'pengeluaran' : ''}.<br>Tambah sekarang!</p>
+        </div>`;
+      return;
+    }
+
+    const catIcons = {
+      'Gaji':'💼','Bonus':'🎁','Freelance':'💻','Investasi':'📈','Bisnis':'🏪','Hadiah':'🎀',
+      'Makanan & Minuman':'🍜','Transportasi':'🚗','Belanja':'🛍️','Hiburan':'🎮',
+      'Kesehatan':'💊','Tagihan':'💡','Pendidikan':'📚','Tabungan':'🏦','Lainnya':'📌'
+    };
+
+    const html = filtered.map(tx => `
+      <div class="tx-item" id="tx-${tx.id}">
+        <div class="tx-icon ${tx.type}">${catIcons[tx.category] || '💳'}</div>
+        <div class="tx-info">
+          <div class="tx-desc">${esc(tx.description)}</div>
+          <div class="tx-meta">
+            <span class="tx-category">${esc(tx.category)}</span>
+            <span>${formatDate(tx.date)}</span>
+          </div>
+        </div>
+        <div class="tx-amount ${tx.type}">${tx.type === 'income' ? '+' : '-'}${fmt(tx.amount)}</div>
+        <button class="tx-delete" onclick="deleteTransaction(${tx.id})" title="Hapus">✕</button>
+      </div>`).join('');
+
+    document.getElementById('tx-list').innerHTML = `<div class="tx-list">${html}</div>`;
+  }
+
+  // ─── Form submit ──────────────────────────────────────────────────
+  document.getElementById('tx-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    const txt = document.getElementById('submit-text');
+    btn.disabled = true;
+    txt.innerHTML = '<span class="spinner"></span> Mengkategorikan AI...';
+
+    try {
+      const tx = await api('POST', '/api/transactions', {
+        type: currentType,
+        description: document.getElementById('desc').value.trim(),
+        amount: parseFloat(document.getElementById('amount').value),
+        date: document.getElementById('date').value
+      });
+      transactions.unshift(tx);
+      renderTransactions();
+      loadSummary();
+      showToast(`Disimpan sebagai "${tx.category}" ✓`);
+      document.getElementById('desc').value = '';
+      document.getElementById('amount').value = '';
+    } catch(err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      txt.textContent = 'Simpan & Kategorikan AI';
+    }
+  });
+
+  // ─── Delete ───────────────────────────────────────────────────────
+  async function deleteTransaction(id) {
+    try {
+      await api('DELETE', `/api/transactions/${id}`);
+      transactions = transactions.filter(t => t.id !== id);
+      renderTransactions();
+      loadSummary();
+      showToast('Transaksi dihapus');
+    } catch(e) {
+      showToast('Gagal menghapus', 'error');
+    }
+  }
+
+  // ─── AI Analysis ──────────────────────────────────────────────────
+  async function getAnalysis() {
+    const btn = document.getElementById('analyze-btn');
+    const icon = document.getElementById('analyze-icon');
+    btn.disabled = true;
+    icon.innerHTML = '<span class="spinner dark"></span>';
+    document.getElementById('analysis-content').innerHTML =
+      '<div style="color:var(--fg3);font-size:13px;text-align:center;padding:20px">Sedang menganalisis keuanganmu...</div>';
+
+    try {
+      const res = await api('GET', '/api/analysis');
+      document.getElementById('analysis-content').innerHTML =
+        `<div class="analysis-text">${esc(res.analysis)}</div>`;
+    } catch(e) {
+      document.getElementById('analysis-content').innerHTML =
+        `<div style="color:var(--expense);font-size:13px">${esc(e.message)}</div>`;
+    } finally {
+      btn.disabled = false;
+      icon.textContent = '✨';
+    }
+  }
+
+  // ─── Filter ───────────────────────────────────────────────────────
+  function setFilter(f) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-chip').forEach((el, i) => {
+      el.classList.toggle('active', ['all','income','expense'][i] === f);
+    });
+    renderTransactions();
+  }
+
+  // ─── Type toggle ─────────────────────────────────────────────────
+  function setType(t) {
+    currentType = t;
+    document.getElementById('btn-income').className = 'type-btn' + (t === 'income' ? ' active-income' : '');
+    document.getElementById('btn-expense').className = 'type-btn' + (t === 'expense' ? ' active-expense' : '');
+  }
+
+  // ─── Theme ────────────────────────────────────────────────────────
+  function toggleTheme() {
+    const cur = document.documentElement.dataset.theme;
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    document.querySelector('.theme-btn').textContent = next === 'dark' ? '☀️' : '🌙';
+    try { localStorage.setItem('theme', next); } catch(e) {}
+  }
+
+  // ─── Utilities ────────────────────────────────────────────────────
+  function fmt(n) {
+    return 'Rp ' + Math.abs(n).toLocaleString('id-ID');
+  }
+  function formatDate(d) {
+    return new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+  }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function showToast(msg, type) {
+    const c = document.getElementById('toast-container');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    if (type === 'error') el.style.background = 'var(--expense)';
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
+</script>
+</body>
+</html>
